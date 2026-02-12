@@ -37,6 +37,10 @@ func TestConfigDirTokenPathAndDefaultCredentials(t *testing.T) {
 	if got := ResolveCredentialsPath(""); got != filepath.Join(wantCfg, "client_secret.json") {
 		t.Fatalf("ResolveCredentialsPath default mismatch: %q", got)
 	}
+
+	if got := CredentialsPath(); got != filepath.Join(wantCfg, "client_secret.json") {
+		t.Fatalf("CredentialsPath mismatch: %q", got)
+	}
 }
 
 func TestLoadOAuthConfigReadError(t *testing.T) {

@@ -42,6 +42,7 @@ func usage() {
 
 Uso:
   dorean_g auth --credentials ./client_secret.json
+  dorean_g auth credentials list
   dorean_g events list [--calendar primary] [--days 7]
   dorean_g events create --summary "Daily" --start "2026-02-12T10:00:00-06:00" --end "2026-02-12T10:30:00-06:00" [--calendar primary] [--description "..."]
 

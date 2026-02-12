@@ -30,6 +30,10 @@ func ResolveCredentialsPath(override string) string {
 	if env := os.Getenv("GCAL_CREDENTIALS"); env != "" {
 		return env
 	}
+	return CredentialsPath()
+}
+
+func CredentialsPath() string {
 	return filepath.Join(ConfigDir(), "client_secret.json")
 }
 
