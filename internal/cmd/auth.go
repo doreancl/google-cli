@@ -104,7 +104,7 @@ func runAuthCredentials(_ context.Context, args []string) error {
 	if _, err := loadOAuthConfigFn(pathOverride); err != nil {
 		return err
 	}
-	data, err := os.ReadFile(pathOverride)
+	data, err := os.ReadFile(pathOverride) //nolint:gosec // user-provided path
 	if err != nil {
 		return fmt.Errorf("no pude leer credenciales en %s: %w", pathOverride, err)
 	}
