@@ -57,11 +57,8 @@ make dg -- events list --calendar primary --days 7
 ## Desarrollo
 
 ```bash
-make test
-make coverage
-make coverage-check            # umbral default 90%
-make coverage-check COVERAGE_THRESHOLD=75
-make ci                        # fmt-check + lint + test + coverage-check
+make ci
+make coverage                  # reporte de coverage (sin gate)
 ```
 
 ## Notas

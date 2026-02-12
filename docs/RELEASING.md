@@ -26,7 +26,7 @@ make ci
 1. `make fmt-check`
 2. `make lint`
 3. `make test`
-4. `make coverage-check`
+4. coverage gate (interno)
 
 ## Coverage (regla actual)
 
@@ -38,8 +38,7 @@ Comandos útiles:
 
 ```bash
 make coverage                           # solo reporte, no falla por umbral
-make coverage-check                     # valida contra 90
-make coverage-check COVERAGE_THRESHOLD=92
+make ci                                 # validación completa
 ```
 
 ## Hooks
