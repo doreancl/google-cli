@@ -60,7 +60,7 @@ make dg -- events list --calendar primary --days 7
 make test
 make coverage
 make coverage-check            # umbral default 90%
-make coverage-check THRESHOLD=75
+make coverage-check COVERAGE_THRESHOLD=75
 make ci                        # fmt-check + lint + test + coverage-check
 ```
 
