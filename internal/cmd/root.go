@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+var (
+	runAuthCommand   = runAuth
+	runEventsCommand = runEvents
+)
+
 func Execute(args []string) error {
 	if len(args) > 0 && args[0] == "--" {
 		args = args[1:]
@@ -23,9 +28,9 @@ func Execute(args []string) error {
 
 	switch args[0] {
 	case "auth":
-		return runAuth(context.Background(), args[1:])
+		return runAuthCommand(context.Background(), args[1:])
 	case "events":
-		return runEvents(context.Background(), args[1:])
+		return runEventsCommand(context.Background(), args[1:])
 	default:
 		usage()
 		return &ExitError{Code: 2, Err: fmt.Errorf("comando no soportado: %s", args[0])}

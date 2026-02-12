@@ -1,0 +1,82 @@
+package googleapi
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"google.golang.org/api/option"
+)
+
+func writeOAuthFixture(t *testing.T, home string) {
+	t.Helper()
+	cfgDir := filepath.Join(home, "Library", "Application Support", "dorean_g")
+	if err := os.MkdirAll(cfgDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	creds := `{"installed":{"client_id":"id","project_id":"p","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","client_secret":"sec","redirect_uris":["http://localhost"]}}`
+	if err := os.WriteFile(filepath.Join(cfgDir, "client_secret.json"), []byte(creds), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	tok := map[string]string{"access_token": "a", "token_type": "Bearer", "refresh_token": "r"}
+	b, _ := json.Marshal(tok)
+	if err := os.WriteFile(filepath.Join(cfgDir, "token.json"), b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNewHTTPClientErrorsWhenMissingConfig(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", "")
+	_, err := newHTTPClient(context.Background())
+	if err == nil {
+		t.Fatal("expected missing credentials error")
+	}
+}
+
+func TestNewHTTPClientSuccess(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", "")
+	writeOAuthFixture(t, home)
+
+	c, err := newHTTPClient(context.Background())
+	if err != nil {
+		t.Fatalf("newHTTPClient: %v", err)
+	}
+	if c.Timeout != defaultTimeout {
+		t.Fatalf("unexpected timeout: %v", c.Timeout)
+	}
+	if _, ok := c.Transport.(*oauthRetryTransport); !ok {
+		t.Fatalf("expected oauthRetryTransport, got %T", c.Transport)
+	}
+}
+
+func TestNewService(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", "")
+	writeOAuthFixture(t, home)
+
+	type stub struct{ N int }
+	out, err := newService(context.Background(), func(context.Context, ...option.ClientOption) (*stub, error) {
+		return &stub{N: 7}, nil
+	})
+	if err != nil {
+		t.Fatalf("newService success: %v", err)
+	}
+	if out.N != 7 {
+		t.Fatalf("unexpected value: %+v", out)
+	}
+
+	_, err = newService(context.Background(), func(context.Context, ...option.ClientOption) (*stub, error) {
+		return nil, errors.New("factory boom")
+	})
+	if err == nil {
+		t.Fatal("expected factory error")
+	}
+}

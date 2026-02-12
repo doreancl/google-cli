@@ -14,6 +14,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var (
+	loadOAuthConfigFn   = authstore.LoadOAuthConfig
+	oauthTokenFromWebFn = oauthTokenFromWeb
+	saveTokenFn         = authstore.SaveToken
+	tokenPathFn         = authstore.TokenPath
+	openBrowserFn       = openBrowser
+)
+
 func runAuth(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("auth", flag.ContinueOnError)
 	credentialsPath := fs.String("credentials", "", "Ruta a client_secret.json")
@@ -21,27 +29,27 @@ func runAuth(ctx context.Context, args []string) error {
 		return &ExitError{Code: 2, Err: err}
 	}
 
-	cfg, err := authstore.LoadOAuthConfig(*credentialsPath)
+	cfg, err := loadOAuthConfigFn(*credentialsPath)
 	if err != nil {
 		return err
 	}
 
-	tok, err := oauthTokenFromWeb(ctx, cfg)
+	tok, err := oauthTokenFromWebFn(ctx, cfg)
 	if err != nil {
 		return err
 	}
-	if err := authstore.SaveToken(tok); err != nil {
+	if err := saveTokenFn(tok); err != nil {
 		return err
 	}
 
-	_, _ = fmt.Fprintf(os.Stdout, "Token guardado en %s\n", authstore.TokenPath())
+	_, _ = fmt.Fprintf(os.Stdout, "Token guardado en %s\n", tokenPathFn())
 	return nil
 }
 
 func oauthTokenFromWeb(ctx context.Context, cfg *oauth2.Config) (*oauth2.Token, error) {
 	authURL := cfg.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	_, _ = fmt.Fprintf(os.Stdout, "Abre esta URL y pega el codigo:\n%s\n\n", authURL)
-	_ = openBrowser(ctx, authURL)
+	_ = openBrowserFn(ctx, authURL)
 
 	_, _ = fmt.Fprint(os.Stdout, "Codigo: ")
 	var code string

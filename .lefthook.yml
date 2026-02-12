@@ -13,3 +13,5 @@ pre-push:
   commands:
     test:
       run: make test
+    coverage-check:
+      run: make coverage-check

@@ -11,7 +11,14 @@ import (
 	"google-cli/internal/googleapi"
 )
 
-var newCalendarClient = googleapi.NewCalendarClient
+type calendarClient interface {
+	ListEvents(context.Context, googleapi.ListEventsRequest) ([]googleapi.Event, error)
+	CreateEvent(context.Context, googleapi.CreateEventRequest) (*googleapi.Event, error)
+}
+
+var newCalendarClient = func(ctx context.Context) (calendarClient, error) {
+	return googleapi.NewCalendarClient(ctx)
+}
 
 func runEvents(ctx context.Context, args []string) error {
 	if len(args) == 0 {

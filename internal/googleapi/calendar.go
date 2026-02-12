@@ -38,8 +38,12 @@ type CreateEventRequest struct {
 	EndRFC3339   string
 }
 
+var newCalendarServiceFn = func(ctx context.Context) (*calendar.Service, error) {
+	return newService(ctx, calendar.NewService)
+}
+
 func NewCalendarClient(ctx context.Context) (*CalendarClient, error) {
-	svc, err := newService(ctx, calendar.NewService)
+	svc, err := newCalendarServiceFn(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("calendar service: %w", err)
 	}

@@ -3,7 +3,7 @@ SHELL := /bin/bash
 # `make` should build the binary by default.
 .DEFAULT_GOAL := build
 
-.PHONY: build dorean_g dg dorean_g-help dg-help help fmt fmt-check lint test ci tools
+.PHONY: build dorean_g dg dorean_g-help dg-help help fmt fmt-check lint test coverage coverage-check ci tools
 
 BIN_DIR := $(CURDIR)/bin
 BIN := $(BIN_DIR)/dorean_g
@@ -18,6 +18,7 @@ TOOLS_DIR := $(CURDIR)/.tools
 GOFUMPT := $(TOOLS_DIR)/gofumpt
 GOIMPORTS := $(TOOLS_DIR)/goimports
 GOLANGCI_LINT := $(TOOLS_DIR)/golangci-lint
+COVERAGE_THRESHOLD ?= 90
 
 # Allow passing CLI args as extra "targets":
 #   make dorean_g -- --help
@@ -78,4 +79,7 @@ lint: tools
 test:
 	@go test ./...
 
-ci: fmt-check lint test
+coverage:
+	@./scripts/check-coverage.sh $(COVERAGE_THRESHOLD)
+
+ci: fmt-check lint test coverage

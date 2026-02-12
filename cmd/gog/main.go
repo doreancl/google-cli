@@ -8,6 +8,12 @@ import (
 )
 
 var (
+	executeFn  = cmd.Execute
+	exitCodeFn = cmd.ExitCode
+	exitFn     = os.Exit
+)
+
+var (
 	version = "dev"
 	commit  = ""
 	date    = ""
@@ -20,8 +26,8 @@ var (
 )
 
 func main() {
-	if err := cmd.Execute(os.Args[1:]); err != nil {
+	if err := executeFn(os.Args[1:]); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(cmd.ExitCode(err))
+		exitFn(exitCodeFn(err))
 	}
 }
