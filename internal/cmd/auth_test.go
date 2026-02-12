@@ -176,6 +176,14 @@ func TestRunAuthCredentialsList(t *testing.T) {
 		}
 	})
 
+	t.Run("set credentials read error", func(t *testing.T) {
+		loadOAuthConfigFn = func(string) (*oauth2.Config, error) { return &oauth2.Config{}, nil }
+		err := runAuth(context.Background(), []string{"credentials", "/tmp/no-existe-creds.json"})
+		if err == nil || !strings.Contains(err.Error(), "no pude leer credenciales") {
+			t.Fatalf("expected read error, got %v", err)
+		}
+	})
+
 	t.Run("no credentials", func(t *testing.T) {
 		credentialsPathFn = func() string { return filepath.Join(t.TempDir(), "client_secret.json") }
 		stderr := captureStderrAuth(t, func() {
@@ -201,6 +209,17 @@ func TestRunAuthCredentialsList(t *testing.T) {
 		})
 		if !strings.Contains(out, "credentials_path\t"+p) {
 			t.Fatalf("unexpected output: %q", out)
+		}
+	})
+
+	t.Run("usage too many args", func(t *testing.T) {
+		err := runAuth(context.Background(), []string{"credentials", "list", "extra"})
+		if err == nil {
+			t.Fatal("expected usage error")
+		}
+		var ee *ExitError
+		if !errors.As(err, &ee) || ee.Code != 2 {
+			t.Fatalf("expected ExitError code 2, got %v", err)
 		}
 	})
 }
@@ -277,19 +296,49 @@ func TestRunAuthAdd(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		loadOAuthConfigFn = func(string) (*oauth2.Config, error) { return &oauth2.Config{}, nil }
+		gotCredPath := ""
+		loadOAuthConfigFn = func(path string) (*oauth2.Config, error) {
+			gotCredPath = path
+			return &oauth2.Config{}, nil
+		}
 		oauthTokenFromWebFn = func(context.Context, *oauth2.Config) (*oauth2.Token, error) {
 			return &oauth2.Token{AccessToken: "a"}, nil
 		}
 		saveTokenFn = func(*oauth2.Token) error { return nil }
 		tokenPathFn = func() string { return "/tmp/token.json" }
 		out := captureStdoutAuth(t, func() {
-			if err := runAuth(context.Background(), []string{"add", "you@gmail.com"}); err != nil {
+			if err := runAuth(context.Background(), []string{"add", "--credentials", "/tmp/c.json", "you@gmail.com"}); err != nil {
 				t.Fatalf("runAuth add: %v", err)
 			}
 		})
+		if gotCredPath != "/tmp/c.json" {
+			t.Fatalf("expected credentials path override, got %q", gotCredPath)
+		}
 		if !strings.Contains(out, "Token guardado en /tmp/token.json para you@gmail.com") {
 			t.Fatalf("unexpected output: %q", out)
+		}
+	})
+
+	t.Run("dependency errors", func(t *testing.T) {
+		loadOAuthConfigFn = func(string) (*oauth2.Config, error) { return nil, errors.New("load boom") }
+		if err := runAuth(context.Background(), []string{"add", "you@gmail.com"}); err == nil {
+			t.Fatal("expected load error")
+		}
+
+		loadOAuthConfigFn = func(string) (*oauth2.Config, error) { return &oauth2.Config{}, nil }
+		oauthTokenFromWebFn = func(context.Context, *oauth2.Config) (*oauth2.Token, error) {
+			return nil, errors.New("oauth boom")
+		}
+		if err := runAuth(context.Background(), []string{"add", "you@gmail.com"}); err == nil {
+			t.Fatal("expected oauth error")
+		}
+
+		oauthTokenFromWebFn = func(context.Context, *oauth2.Config) (*oauth2.Token, error) {
+			return &oauth2.Token{AccessToken: "a"}, nil
+		}
+		saveTokenFn = func(*oauth2.Token) error { return errors.New("save boom") }
+		if err := runAuth(context.Background(), []string{"add", "you@gmail.com"}); err == nil {
+			t.Fatal("expected save error")
 		}
 	})
 }
