@@ -62,7 +62,7 @@ func runAuth(ctx context.Context, args []string) error {
 func runAuthAdd(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("auth add", flag.ContinueOnError)
 	credentialsPath := fs.String("credentials", "", "Ruta a client_secret.json")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(reorderAuthAddArgs(args)); err != nil {
 		return &ExitError{Code: 2, Err: err}
 	}
 	if fs.NArg() != 1 {
@@ -86,6 +86,31 @@ func runAuthAdd(ctx context.Context, args []string) error {
 	}
 	_, _ = fmt.Fprintf(os.Stdout, "Token guardado en %s para %s\n", tokenPathFn(), email)
 	return nil
+}
+
+// Go's stdlib flag parser stops parsing at the first non-flag argument.
+// Reorder known/unknown flags before positional args so `auth add <email> --credentials ...` works.
+func reorderAuthAddArgs(args []string) []string {
+	flags := make([]string, 0, len(args))
+	positionals := make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch {
+		case arg == "--credentials":
+			flags = append(flags, arg)
+			if i+1 < len(args) {
+				flags = append(flags, args[i+1])
+				i++
+			}
+		case strings.HasPrefix(arg, "--credentials="):
+			flags = append(flags, arg)
+		case strings.HasPrefix(arg, "-"):
+			flags = append(flags, arg)
+		default:
+			positionals = append(positionals, arg)
+		}
+	}
+	return append(flags, positionals...)
 }
 
 func runAuthCredentials(_ context.Context, args []string) error {

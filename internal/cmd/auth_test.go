@@ -319,6 +319,54 @@ func TestRunAuthAdd(t *testing.T) {
 		}
 	})
 
+	t.Run("success credentials after email", func(t *testing.T) {
+		gotCredPath := ""
+		loadOAuthConfigFn = func(path string) (*oauth2.Config, error) {
+			gotCredPath = path
+			return &oauth2.Config{}, nil
+		}
+		oauthTokenFromWebFn = func(context.Context, *oauth2.Config) (*oauth2.Token, error) {
+			return &oauth2.Token{AccessToken: "a"}, nil
+		}
+		saveTokenFn = func(*oauth2.Token) error { return nil }
+		tokenPathFn = func() string { return "/tmp/token.json" }
+		out := captureStdoutAuth(t, func() {
+			if err := runAuth(context.Background(), []string{"add", "you@gmail.com", "--credentials", "/tmp/c2.json"}); err != nil {
+				t.Fatalf("runAuth add: %v", err)
+			}
+		})
+		if gotCredPath != "/tmp/c2.json" {
+			t.Fatalf("expected credentials path override, got %q", gotCredPath)
+		}
+		if !strings.Contains(out, "Token guardado en /tmp/token.json para you@gmail.com") {
+			t.Fatalf("unexpected output: %q", out)
+		}
+	})
+
+	t.Run("success credentials equals after email", func(t *testing.T) {
+		gotCredPath := ""
+		loadOAuthConfigFn = func(path string) (*oauth2.Config, error) {
+			gotCredPath = path
+			return &oauth2.Config{}, nil
+		}
+		oauthTokenFromWebFn = func(context.Context, *oauth2.Config) (*oauth2.Token, error) {
+			return &oauth2.Token{AccessToken: "a"}, nil
+		}
+		saveTokenFn = func(*oauth2.Token) error { return nil }
+		tokenPathFn = func() string { return "/tmp/token.json" }
+		out := captureStdoutAuth(t, func() {
+			if err := runAuth(context.Background(), []string{"add", "you@gmail.com", "--credentials=/tmp/c3.json"}); err != nil {
+				t.Fatalf("runAuth add: %v", err)
+			}
+		})
+		if gotCredPath != "/tmp/c3.json" {
+			t.Fatalf("expected credentials path override, got %q", gotCredPath)
+		}
+		if !strings.Contains(out, "Token guardado en /tmp/token.json para you@gmail.com") {
+			t.Fatalf("unexpected output: %q", out)
+		}
+	})
+
 	t.Run("dependency errors", func(t *testing.T) {
 		loadOAuthConfigFn = func(string) (*oauth2.Config, error) { return nil, errors.New("load boom") }
 		if err := runAuth(context.Background(), []string{"add", "you@gmail.com"}); err == nil {
