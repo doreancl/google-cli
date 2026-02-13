@@ -1,14 +1,14 @@
 ---
-summary: "Release checklist for google-cli (GitHub release + Homebrew tap)"
+summary: "Release checklist for google-cli (GitHub release + GoReleaser artifacts)"
 ---
 
 # Releasing `google-cli`
 
-This document defines the real release flow for this repo.
+This document defines the release flow for this repo.
 
-Always do **all** steps below (CI + changelog + tag + GitHub release artifacts + tap update + Homebrew sanity install). No partial releases.
+Always do all steps below (CI + changelog + tag + GitHub release artifacts + verification). No partial releases.
 
-Shortcut scripts (preferred, keep notes non-empty):
+Shortcut scripts (preferred):
 ```sh
 scripts/release.sh X.Y.Z
 scripts/verify-release.sh X.Y.Z
@@ -18,22 +18,24 @@ scripts/verify-release.sh X.Y.Z
 - Clean working tree on `main`.
 - Go toolchain installed (Go version comes from `go.mod`).
 - `make` works locally.
+- `gh` CLI authenticated with repo write access.
 
 ## 1) Verify build is green
 ```sh
 make ci
 ```
 
-Confirm GitHub Actions `ci` is green for the commit you’re tagging:
+Confirm GitHub Actions `ci` is green for the commit you are tagging:
 ```sh
-gh run list -L 5 --branch main
+gh run list -L 5 --workflow ci.yml --branch main
 ```
 
 ## 2) Update changelog
-- Update `CHANGELOG.md` for the version you’re releasing.
-
-Example heading:
-- `## 0.1.0 - 2025-12-12`
+- Update `CHANGELOG.md` with a version heading for the release.
+- Supported headings in automation scripts:
+  - `## [X.Y.Z] - YYYY-MM-DD`
+  - `## X.Y.Z - YYYY-MM-DD`
+- Release section must not be `Unreleased`.
 
 ## 3) Commit, tag & push
 ```sh
@@ -48,31 +50,25 @@ git push origin main --tags
 ```
 
 ## 4) Verify GitHub release artifacts
-The tag push triggers `.github/workflows/release.yml` (GoReleaser). Ensure it completes successfully and the release has assets.
+The tag push triggers `.github/workflows/release.yml` (GoReleaser). Ensure it completes and the release has assets.
 
 ```sh
 gh run list -L 5 --workflow release.yml
 gh release view vX.Y.Z
 ```
 
-Ensure GitHub release notes are not empty (mirror the changelog section).
-
-If the workflow needs a rerun:
+## 5) Run automated verification
 ```sh
-gh workflow run release.yml -f tag=vX.Y.Z
+scripts/verify-release.sh X.Y.Z
 ```
 
-## 6) Sanity-check install from tap
-```sh
-brew update
-brew uninstall gogcli || true
-brew untap steipete/tap || true
-brew tap steipete/tap
-brew install steipete/tap/gogcli
-brew test steipete/tap/gogcli
+This verifies:
+- release notes are present,
+- release assets exist,
+- `release.yml` is green for the tag,
+- latest `ci.yml` on `main` is green,
+- `checksums.txt` is attached.
 
-gog --help
-```
 ## Notes
-- `gog` currently does not print a version string; use tags + changelog as the source of truth.
-- If you later add `gog version`, update this doc to validate `gog version` post-install.
+- Artifacts are built from `.goreleaser.yaml`.
+- Current binary name is `dorean_g`.
