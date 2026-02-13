@@ -1,8 +1,8 @@
-# Spec: Paridad mínima auth + calendar
+# Spec: Minimal auth + calendar parity
 
 ## Goal
 
-Soportar este flujo de punta a punta:
+Support this end-to-end flow:
 
 ```bash
 dorean_g auth credentials ~/Downloads/client_secret.json
@@ -13,17 +13,17 @@ dorean_g calendar calendars --max 5 --json | jq '.calendars[].summary'
 
 ## Layer 1 (Functional)
 
-El CLI debe soportar:
+The CLI must support:
 
 - `dorean_g auth credentials <credentials.json>`
 - `dorean_g auth add <email>`
 - `dorean_g calendar calendars [--max N] [--json]`
 
-Contrato de `calendar calendars`:
+`calendar calendars` contract:
 
-- Lista calendarios de la cuenta activa.
-- `--max` default `50`; `--max <= 0` es error de uso.
-- `--json` devuelve:
+- Lists calendars for the active account.
+- `--max` defaults to `50`; `--max <= 0` is a usage error.
+- `--json` returns:
 
 ```json
 {
@@ -39,31 +39,31 @@ Contrato de `calendar calendars`:
 
 ## Layer 2 (Non-Functional)
 
-- Salida parseable en modo texto (columnas estables).
+- Parseable output in text mode (stable columns).
 - Exit codes:
-  - `0` éxito
-  - `2` uso inválido
-  - `1` error operativo/auth/API
+  - `0` success
+  - `2` invalid usage
+  - `1` operational/auth/API error
 
 ## Layer 8 (Integrations)
 
-- Cuenta activa por `GOG_ACCOUNT`.
-- Fallback legado a `token.json` si `GOG_ACCOUNT` no está seteado.
+- Active account is selected by `GOG_ACCOUNT`.
+- Legacy fallback to `token.json` if `GOG_ACCOUNT` is not set.
 
 ## Layer 6 (Testing)
 
 - Unit:
-  - `auth credentials` válido/inválido
-  - `auth add` válido/inválido/sin refresh token
-  - storage por cuenta
+  - `auth credentials` valid/invalid
+  - `auth add` valid/invalid/without refresh token
+  - per-account storage
 - Integration-ish:
-  - cliente API usa `GOG_ACCOUNT` cuando existe
-  - fallback legacy cuando no existe
-  - `calendar calendars --json` mantiene shape estable para `jq`
+  - API client uses `GOG_ACCOUNT` when present
+  - legacy fallback when absent
+  - `calendar calendars --json` keeps a stable shape for `jq`
 
 ## Compatibility
 
-- No romper:
+- Do not break:
   - `dorean_g auth` legacy
   - `dorean_g auth --credentials ...`
   - `dorean_g events list/create`

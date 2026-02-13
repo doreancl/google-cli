@@ -1,73 +1,71 @@
-# Google Calendar CLI (base)
+# Google Calendar CLI
 
-CLI en Go para listar y crear eventos en Google Calendar, inspirado en `gogcli`.
+A simple Go CLI to authenticate with Google Calendar, list events, and create events.
 
-## 1) Crear credenciales OAuth
+## Setup OAuth credentials
 
-1. Entra a Google Cloud Console.
-2. Crea un proyecto (o usa uno existente).
-3. Habilita **Google Calendar API**.
-4. Configura **OAuth consent screen** (External o Internal).
-5. Crea credenciales de tipo **OAuth Client ID** (Desktop app).
-6. Descarga el JSON y guárdalo como:
+1. Open Google Cloud Console.
+2. Create a project (or use an existing one).
+3. Enable **Google Calendar API**.
+4. Configure the **OAuth consent screen**.
+5. Create an **OAuth Client ID** for **Desktop app**.
+6. Download the JSON file and save it as:
    - macOS: `~/Library/Application Support/dorean_g/client_secret.json`
    - Linux: `~/.config/dorean_g/client_secret.json`
-   - o donde quieras y usa `--credentials`.
+   - or anywhere and pass `--credentials`.
 
-## 2) Autenticar
+## Authenticate
 
 ```bash
-./bin/dorean_g auth --credentials /ruta/client_secret.json
+./bin/dorean_g auth --credentials /path/to/client_secret.json
 ```
 
-También puedes usar:
+Or:
 
 ```bash
-export GCAL_CREDENTIALS=/ruta/client_secret.json
+export GCAL_CREDENTIALS=/path/to/client_secret.json
 ./bin/dorean_g auth
 ```
 
-Esto guarda el token en:
+Token path:
 - macOS: `~/Library/Application Support/dorean_g/token.json`
 - Linux: `~/.config/dorean_g/token.json`
 
-## 3) Listar eventos
+## List events
 
 ```bash
 ./bin/dorean_g events list --calendar primary --days 7
 ```
 
-## 4) Crear evento
+## Create event
 
 ```bash
 ./bin/dorean_g events create \
   --calendar primary \
-  --summary "Reunión de seguimiento" \
+  --summary "Weekly sync" \
   --start "2026-02-12T10:00:00-06:00" \
   --end "2026-02-12T10:30:00-06:00" \
-  --description "Agenda semanal"
+  --description "Weekly agenda"
 ```
 
-Alias corto con Makefile:
+## Shortcut with Make
 
 ```bash
 make dg -- events list --calendar primary --days 7
 ```
 
-## Desarrollo
+## Development
 
 ```bash
 make ci
-make coverage                  # reporte de coverage (sin gate)
+make coverage
 ```
 
 ## Credits
 
-Este proyecto está inspirado en steipete originals CLIs
+Inspired by [gogcli](https://github.com/steipete/gogcli).
 
-- [gogcli](https://github.com/steipete/gogcli).
+## Notes
 
-## Notas
-
-- Formato de fecha/hora: RFC3339.
-- Esta es una base inicial. Siguiente paso recomendado: añadir `update`, `delete`, filtros por texto, y salida JSON.
+- Date/time format: RFC3339.
+- This is a base CLI; next steps can include `update`, `delete`, text filters, and JSON output.

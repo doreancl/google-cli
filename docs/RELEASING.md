@@ -4,7 +4,7 @@ summary: "Release checklist for google-cli (GitHub release + Homebrew tap)"
 
 # Releasing `google-cli`
 
-Este documento define el flujo real para publicar en este repo.
+This document defines the real release flow for this repo.
 
 Always do **all** steps below (CI + changelog + tag + GitHub release artifacts + tap update + Homebrew sanity install). No partial releases.
 
