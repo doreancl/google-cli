@@ -1,55 +1,78 @@
-# Releasing
+---
+summary: "Release checklist for google-cli (GitHub release + Homebrew tap)"
+---
+
+# Releasing `google-cli`
 
 Este documento define el flujo real para publicar en este repo.
 
-## Referencias
+Always do **all** steps below (CI + changelog + tag + GitHub release artifacts + tap update + Homebrew sanity install). No partial releases.
 
-- Base general de repo/proceso: [gogcli](https://github.com/steipete/gogcli)
-- Solo para coverage/lint gate: [spogo](https://github.com/steipete/spogo)
-- Script de coverage tomado como referencia: [scripts/check-coverage.sh](https://github.com/steipete/spogo/blob/main/scripts/check-coverage.sh)
+Shortcut scripts (preferred, keep notes non-empty):
+```sh
+scripts/release.sh X.Y.Z
+scripts/verify-release.sh X.Y.Z
+```
+
+## 0) Prereqs
+- Clean working tree on `main`.
+- Go toolchain installed (Go version comes from `go.mod`).
+- `make` works locally.
 
 ## 1) Verify build is green
 ```sh
 make ci
 ```
 
-## Gate obligatorio antes de release
-
-Ejecuta:
-
-```bash
-make ci
+Confirm GitHub Actions `ci` is green for the commit you’re tagging:
+```sh
+gh run list -L 5 --branch main
 ```
 
-`make ci` incluye:
+## 2) Update changelog
+- Update `CHANGELOG.md` for the version you’re releasing.
 
-1. `make fmt-check`
-2. `make lint`
-3. `make test`
-4. coverage gate (interno)
+Example heading:
+- `## 0.1.0 - 2025-12-12`
 
-## Coverage (regla actual)
+## 3) Commit, tag & push
+```sh
+git checkout main
+git pull
 
-- Umbral por default: `90`
-- Implementación: `scripts/check-coverage.sh`
-- Configuración del umbral en Make: `COVERAGE_THRESHOLD ?= 90`
+# commit changelog + any release tweaks
+git commit -am "release: vX.Y.Z"
 
-Comandos útiles:
-
-```bash
-make coverage                           # solo reporte, no falla por umbral
-make ci                                 # validación completa
+git tag -a vX.Y.Z -m "Release X.Y.Z"
+git push origin main --tags
 ```
 
-## Hooks
+## 4) Verify GitHub release artifacts
+The tag push triggers `.github/workflows/release.yml` (GoReleaser). Ensure it completes successfully and the release has assets.
 
-- `pre-commit`: `fmt-check`, `lint`, `test`
-- `pre-push`: `test`, `coverage-check`
+```sh
+gh run list -L 5 --workflow release.yml
+gh release view vX.Y.Z
+```
 
-## Checklist de release
+Ensure GitHub release notes are not empty (mirror the changelog section).
 
-1. Confirmar cambios listos en `CHANGELOG.md`.
-2. Correr `make ci` y dejar todo en verde.
-3. Confirmar que no hay credenciales/tokens en cambios staged.
-4. Push de la rama y esperar CI remoto en verde.
-5. Crear tag/release.
+If the workflow needs a rerun:
+```sh
+gh workflow run release.yml -f tag=vX.Y.Z
+```
+
+## 6) Sanity-check install from tap
+```sh
+brew update
+brew uninstall gogcli || true
+brew untap steipete/tap || true
+brew tap steipete/tap
+brew install steipete/tap/gogcli
+brew test steipete/tap/gogcli
+
+gog --help
+```
+## Notes
+- `gog` currently does not print a version string; use tags + changelog as the source of truth.
+- If you later add `gog version`, update this doc to validate `gog version` post-install.

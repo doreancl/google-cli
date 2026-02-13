@@ -8,3 +8,4 @@
 - for coverage strategy and how to execute the coverage: https://github.com/steipete/spogo
 - Implemented in this repo:
   - Script: `scripts/check-coverage.sh`
+ 
