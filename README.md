@@ -61,6 +61,12 @@ make ci
 make coverage                  # reporte de coverage (sin gate)
 ```
 
+## Credits
+
+Este proyecto está inspirado en steipete originals CLIs
+
+- [gogcli](https://github.com/steipete/gogcli).
+
 ## Notas
 
 - Formato de fecha/hora: RFC3339.
