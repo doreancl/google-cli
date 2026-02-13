@@ -5,25 +5,26 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"path/filepath"
 	"testing"
+
+	"google-cli/internal/authstore"
 
 	"google.golang.org/api/option"
 )
 
-func writeOAuthFixture(t *testing.T, home string) {
+func writeOAuthFixture(t *testing.T) {
 	t.Helper()
-	cfgDir := filepath.Join(home, "Library", "Application Support", "dorean_g")
+	cfgDir := authstore.ConfigDir()
 	if err := os.MkdirAll(cfgDir, 0o700); err != nil {
 		t.Fatal(err)
 	}
 	creds := `{"installed":{"client_id":"id","project_id":"p","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","client_secret":"sec","redirect_uris":["http://localhost"]}}`
-	if err := os.WriteFile(filepath.Join(cfgDir, "client_secret.json"), []byte(creds), 0o600); err != nil {
+	if err := os.WriteFile(authstore.CredentialsPath(), []byte(creds), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	tok := map[string]string{"access_token": "a", "token_type": "Bearer", "refresh_token": "r"}
 	b, _ := json.Marshal(tok)
-	if err := os.WriteFile(filepath.Join(cfgDir, "token.json"), b, 0o600); err != nil {
+	if err := os.WriteFile(authstore.TokenPath(), b, 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -42,7 +43,7 @@ func TestNewHTTPClientSuccess(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("XDG_CONFIG_HOME", "")
-	writeOAuthFixture(t, home)
+	writeOAuthFixture(t)
 
 	c, err := newHTTPClient(context.Background())
 	if err != nil {
@@ -60,7 +61,7 @@ func TestNewService(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("XDG_CONFIG_HOME", "")
-	writeOAuthFixture(t, home)
+	writeOAuthFixture(t)
 
 	type stub struct{ N int }
 	out, err := newService(context.Background(), func(context.Context, ...option.ClientOption) (*stub, error) {

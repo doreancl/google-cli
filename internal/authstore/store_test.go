@@ -25,7 +25,11 @@ func TestConfigDirTokenPathAndDefaultCredentials(t *testing.T) {
 	t.Setenv("GCAL_CREDENTIALS", "")
 
 	cfg := ConfigDir()
-	wantCfg := filepath.Join(tmp, "Library", "Application Support", AppName)
+	baseCfg, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatalf("UserConfigDir error: %v", err)
+	}
+	wantCfg := filepath.Join(baseCfg, AppName)
 	if cfg != wantCfg {
 		t.Fatalf("ConfigDir mismatch: got %q want %q", cfg, wantCfg)
 	}
