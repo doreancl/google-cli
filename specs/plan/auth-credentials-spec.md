@@ -2,36 +2,36 @@
 
 ## Goal
 
-Registrar credenciales OAuth de forma explícita y parseable, manteniendo compatibilidad con `auth --credentials`.
+Register OAuth credentials in an explicit, parseable way while keeping compatibility with `auth --credentials`.
 
 ## Layer 1 (Functional)
 
-- Comando: `dorean_g auth credentials <credentials.json>`.
-- Requiere exactamente 1 argumento.
-- Valida JSON OAuth Desktop con `google.ConfigFromJSON(..., CalendarScope)`.
-- Guarda copia administrada en `ConfigDir()/client_secret.json`.
-- Expande `~` y acepta ruta relativa o absoluta.
+- Command: `dorean_g auth credentials <credentials.json>`.
+- Requires exactly 1 argument.
+- Validates Desktop OAuth JSON with `google.ConfigFromJSON(..., CalendarScope)`.
+- Saves a managed copy at `ConfigDir()/client_secret.json`.
+- Expands `~` and accepts relative or absolute paths.
 
 ## Layer 2 (Non-Functional)
 
-- Permisos obligatorios:
-  - directorio `0700`
-  - archivo `0600`
-- Respuesta en stdout parseable:
+- Required permissions:
+  - directory `0700`
+  - file `0600`
+- Parseable stdout response:
   - `credentials_path\t<absolute_path>`
 
 ## Layer 6 (Testing)
 
-- Unit tests para:
-  - éxito con archivo válido
-  - argumento faltante o extra (`exit code 2`)
-  - archivo inexistente/no legible
-  - JSON inválido
+- Unit tests for:
+  - success with a valid file
+  - missing or extra argument (`exit code 2`)
+  - missing/unreadable file
+  - invalid JSON
 - Regression:
-  - `dorean_g auth --credentials <path>` sigue funcionando
-  - `dorean_g auth` sin subcomando mantiene flujo legacy
+  - `dorean_g auth --credentials <path>` still works
+  - `dorean_g auth` without subcommand keeps the legacy flow
 
 ## Compatibility
 
-- Sin ruptura de `GCAL_CREDENTIALS`.
-- Sin cambios al formato de token.
+- No breaking changes to `GCAL_CREDENTIALS`.
+- No token format changes.
