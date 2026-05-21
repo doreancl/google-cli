@@ -2,6 +2,14 @@
 
 A simple Go CLI to authenticate with Google Calendar, list events, and create events.
 
+## Build
+
+```bash
+make build
+```
+
+This creates `bin/dorean_g`. In this README, `dorean_g` refers to that executable binary.
+
 ## 1) Setup OAuth credentials
 
 1. Open Google Cloud Console.
@@ -53,6 +61,8 @@ Token path:
 ```bash
 make dg -- events list --calendar primary --days 7
 ```
+
+`make dg` is a shortcut that builds and runs `bin/dorean_g`.
 
 ## Development
 
